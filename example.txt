@@ -1,0 +1,8 @@
+google.com
+facebook.com
+amazon.com
+paypal.com
+example.com
+phishing-site.com
+malware-attack.net
+fake-login.com

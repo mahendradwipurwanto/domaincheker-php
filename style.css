@@ -93,3 +93,11 @@
         transform: rotate(360deg);
     }
 }
+
+.checkbox-label {
+    font-weight: normal;
+}
+
+.form-label {
+    font-weight: 500;
+}
