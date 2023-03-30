@@ -2,29 +2,38 @@
 
 require_once('functions.php');
 
-if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['domains_file'])) {
-  // Check if file was uploaded successfully
-  if($_FILES['domains_file']['error'] == 0) {
-    $file = $_FILES['domains_file']['tmp_name'];
-    $domains = array_map('trim', file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
+if($_SERVER['REQUEST_METHOD'] == 'POST') {
 
-    // Check if there are more than 10 domains
-    if(count($domains) > 10) {
-      echo "<script>alert('Maximum 10 domains are allowed in one upload.');</script>";
-    } else {
-      // Process the domains
-      // Get the uploaded file and move it to the server's temp directory
-      $file = $_FILES['domains_file'];
-      $tempFilename = $file['tmp_name'];
-      $tempFilepath = tempnam(sys_get_temp_dir(), 'domains_');
-      move_uploaded_file($tempFilename, $tempFilepath);
-
-      // Call the checkDomains function with the temp file path
-      $results = checkDomains($tempFilepath);
+    // check if submit url domain
+    if (isset($_POST['submit_url'])) {
+        $results = checkDomains($_POST['domains_url'], 0);
     }
-  } else {
-      echo "<script>alert('Failed upload file.');</script>";
-  }
+
+    // check if submit file
+    if (isset($_POST['submit_file'])){
+        // Check if file was uploaded successfully
+        if($_FILES['domains_file']['error'] == 0) {
+            $file = $_FILES['domains_file']['tmp_name'];
+            $domains = array_map('trim', file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
+
+            // Check if there are more than 10 domains
+            if(count($domains) > 10) {
+                echo "<script>alert('Maximum 10 domains are allowed in one upload.');</script>";
+            } else {
+                // Process the domains
+                // Get the uploaded file and move it to the server's temp directory
+                $file = $_FILES['domains_file'];
+                $tempFilename = $file['tmp_name'];
+                $tempFilepath = tempnam(sys_get_temp_dir(), 'domains_');
+                move_uploaded_file($tempFilename, $tempFilepath);
+
+                // Call the checkDomains function with the temp file path
+                $results = checkDomains($tempFilepath, 1);
+            }
+        } else {
+            echo "<script>alert('Failed upload file.');</script>";
+        }
+    }
 }
 ?>
 
@@ -32,7 +41,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['domains_file'])) {
 <html>
 
 <head>
-    <title>Phishing Checker</title>
+    <title>Cek Domain Phishing</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/css/bootstrap.min.css">
@@ -47,16 +56,36 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['domains_file'])) {
         <div class="loader-section section-right"></div>
     </div>
     <div class="container">
-        <h1 class="my-4">Phishing Checker</h1>
+        <h1 class="my-4">Cek URL Phising</h1>
         <form method="post" enctype="multipart/form-data" onsubmit="showLoader()" id="domains_form">
+            <div class="mb-3">
+                <div class="row">
+                    <div class="col-6">
+                        <label for="domains_url" class="form-label">Input URL:</label>
+                        <div class="mb-3 text-center">
+                            <input type="text" class="form-control mb-3" name="domains_url" id="domains_url"
+                                accept=".txt">
+                            <button type="submit" class="btn btn-primary btn-sm" name="submit_url">Proses</button>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label for="domains_file" class="form-label">Input file berupa text:</label>
+                        <div class="mb-3 text-center">
+                            <input type="file" class="form-control mb-3" name="domains_file" id="domains_file"
+                                accept=".txt">
+                            <button type="submit" class="btn btn-primary btn-sm" name="submit_file">Proses</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="row mb-3">
-                <label class="form-label">Select the checks to perform:</label>
+                <label class="form-label">Pilih kategori/kriteria dari phising:</label>
                 <div class="col-md-6">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="checks[dots]" value="dots" id="check-dots"
                             <?php if(isset($_POST['checks']) && in_array('dots', $_POST['checks'])) echo 'checked'; ?>>
                         <label class="form-check-label checkbox-label" for="check-dots">
-                            Number of dots
+                            Jumlah Dot
                         </label>
                     </div>
                     <div class="form-check">
@@ -64,7 +93,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['domains_file'])) {
                             id="check-at-symbol"
                             <?php if(isset($_POST['checks']) && in_array('symbol', $_POST['checks'])) echo 'checked'; ?>>
                         <label class="form-check-label checkbox-label" for="check-at-symbol">
-                            Presence of symbol @
+                            Penggunaan @
                         </label>
                     </div>
                     <div class="form-check">
@@ -72,7 +101,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['domains_file'])) {
                             id="check-ip-address"
                             <?php if(isset($_POST['checks']) && in_array('ip', $_POST['checks'])) echo 'checked'; ?>>
                         <label class="form-check-label checkbox-label" for="check-ip-address">
-                            If IP address
+                            IP address
                         </label>
                     </div>
                 </div>
@@ -81,14 +110,14 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['domains_file'])) {
                         <input class="form-check-input" type="checkbox" name="checks[age]" value="age" id="check-age"
                             <?php if(isset($_POST['checks']) && in_array('age', $_POST['checks'])) echo 'checked'; ?>>
                         <label class="form-check-label checkbox-label" for="check-age">
-                            How old is the domain
+                            Usia domain
                         </label>
                     </div>
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="checks[ssl]" value="ssl" id="check-ssl"
                             <?php if(isset($_POST['checks']) && in_array('ssl', $_POST['checks'])) echo 'checked'; ?>>
                         <label class="form-check-label checkbox-label" for="check-ssl">
-                            SSL certificate
+                            Sertifikat SSL
                         </label>
                     </div>
                     <div class="form-check">
@@ -96,17 +125,11 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['domains_file'])) {
                             id="check-meta-tags"
                             <?php if(isset($_POST['checks']) && in_array('meta', $_POST['checks'])) echo 'checked'; ?>>
                         <label class="form-check-label checkbox-label" for="check-meta-tags">
-                            Meta tags of domain
+                            Meta tags dari domain
                         </label>
                     </div>
                 </div>
             </div>
-            <div class="mb-3">
-                <label for="domains_file" class="form-label">Upload a text file containing a list of domains:</label>
-                <input type="file" class="form-control" name="domains_file" id="domains_file" accept=".txt" required>
-            </div>
-            <button type="submit" class="btn btn-primary" name="submit">Check Domains</button>
-            <a href="example.txt" download class="btn btn-info text-white my-4">Download Example file</a>
         </form>
         <?php if (isset($results['data'])): ?>
         <h2 class="my-4">Results</h2>
@@ -114,9 +137,9 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['domains_file'])) {
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th scope="col">Domain</th>
-                        <th scope="col">Is Phishing?</th>
-                        <th scope="col">Score</th>
+                        <th scope="col">Url</th>
+                        <th scope="col">Hasil/Output</th>
+                        <!-- <th scope="col">Score</th> -->
                     </tr>
                 </thead>
                 <tbody>
@@ -124,13 +147,12 @@ if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['domains_file'])) {
                     <tr>
                         <td><?= $result['domain'] ?></td>
                         <td><?= $result['is_phishing'] ?></td>
-                        <td><?= $result['score'] ?></td>
+                        <!-- <td><?= $result['score'] ?></td> -->
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
-        <a href="<?= $results['file'] ?>" download class="btn btn-primary my-4">Download Results</a>
         <?php endif; ?>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.0/js/bootstrap.bundle.min.js"></script>

@@ -1,8 +1,1 @@
-google.com - No - Score: 2
-facebook.com - No - Score: 2
-amazon.com - No - Score: 2
-paypal.com - No - Score: 2
-example.com - No - Score: 2
-phishing-site.com - No - Score: 2
-malware-attack.net - No - Score: 2
-fake-login.com - No - Score: 2
+stiki.ac.id - Bukan Phising
